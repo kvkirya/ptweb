@@ -1,14 +1,12 @@
 import streamlit as st
 from PIL import Image
 import numpy as np
+from numpy import array, float32
 import os
 import requests
-
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 import matplotlib.patches as patches
-import cv2
-
 
 def resize_image(image):
     image = Image.open(image)
@@ -199,10 +197,9 @@ def draw_prediction_on_image(
   image_from_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
 #   print(image_from_plot)
 
-  image_from_plot = image_from_plot.reshape(3200,2400,3)
+  image_from_plot = image_from_plot.reshape(1200,1200,3)
 #   image_from_plot = image_from_plot.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 #   plt.close(fig)
-  plt.savefig(f"{image}")
   if output_image_height is not None:
     output_image_width = int(output_image_height / height * width)
     image_from_plot = cv2.resize(
@@ -212,13 +209,33 @@ def draw_prediction_on_image(
 
 def plot_skeleton_on_image(image, keypoints_with_scores):
 
-    display_image = image
+    display_image = load_image_for_skeleton(image)
 
     output_overlay = draw_prediction_on_image(
-        np.squeeze(display_image.numpy(), axis=0), keypoints_with_scores)
+        np.squeeze(display_image, axis=0), keypoints_with_scores)
 
     return output_overlay
 
+def load_image_for_skeleton(image_path):
+    # Open the image file
+    with Image.open(image_path) as img:
+        # Convert to RGB if it's a 4-channel image (e.g., RGBA)
+        if img.mode == 'RGBA':
+            img = img.convert('RGB')
+
+        # Resize and pad the image to maintain aspect ratio
+        width, height = img.size
+        new_size = max(width, height)
+        new_im = Image.new("RGB", (new_size, new_size))
+        new_im.paste(img, ((new_size-width)//2, (new_size-height)//2))
+
+        # Resize to the target dimensions
+        resized_image = new_im.resize((1280, 1280))
+
+        # Convert to NumPy array and expand dimensions
+        display_image = np.expand_dims(np.array(resized_image), axis=0)
+
+        return display_image
 
 url = 'http://0.0.0.0:8000' # URL of the registry API
 
@@ -230,7 +247,7 @@ uploaded_file = st.file_uploader("Choose an image...", type=['jpg', 'png', 'jpeg
 
 if uploaded_file is not None:
 
-    st.image(uploaded_file, caption="uploaded_img", use_column_width=True)
+    #st.image(uploaded_file, caption="uploaded_img", use_column_width=True)
 
     save_image_as_jpeg(uploaded_file, "test_image")
 
@@ -246,7 +263,17 @@ if uploaded_file is not None:
         # Make the POST request
         respose_skeleton = requests.post(f"{url}/skeletonizer/", files=files)
 
-    #st.write(respose_skeleton.text)
+    keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
+    keypoints_angles = eval(eval(respose_skeleton.text)["keypoints"])
+
+    test_array = plot_skeleton_on_image("../uploaded_images/test_image.jpg", keypoints_scores)
+
+    skele_image = Image.fromarray(test_array)
+
+    st.image(skele_image)
+
+    #st.write(keypoints_scores)
+    #st.write(keypoints_angles)
 
     # Print the response from the server
     dict_var = eval(respose_skeleton.text)
@@ -257,4 +284,4 @@ if uploaded_file is not None:
 
     # Print the response from the server
 
-    st.markdown(f"**GOD DAMN NOW THAT'S ONE HELL OF A {pose_string}, KEEP UP THE GOOD WORK CHAP**")
+    st.markdown(f"**GOD DAMN NOW THAT'S ONE HELL OF A {pose_string}, KEEP UP THE GOOD WORK CHAMP**")
