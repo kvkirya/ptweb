@@ -251,7 +251,7 @@ if uploaded_file is not None:
 
     #st.image(uploaded_file, caption="uploaded_img", use_column_width=True)
     image = Image.open(uploaded_file)
-    image.resize((1200,1600))
+    image = image.resize((1600,1200))
     image_array = np.array(image)
     print(image_array.shape)
     # save_image_as_jpeg(uploaded_file, "test_image")
@@ -281,6 +281,8 @@ if uploaded_file is not None:
     skele_array = draw_prediction_on_image(image_array, keypoints_scores)
 
     skele_image = Image.fromarray(skele_array)
+
+    skele_image = skele_image.rotate(270)
 
     st.image(skele_image)
 
