@@ -259,9 +259,9 @@ def webcam():
         with lock:
             if frame_container["frame_count"] % 2 == 0:
                 frame_container["frame_count"] = 1
-                requests.post("http://0.0.0.0:8000/skeletonizer", json=json.dumps(image_array.tolist()))
+                requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()))
             elif frame_container["frame_count"] == 1:
-                response = requests.get("http://0.0.0.0:8000/skeletonizer")
+                response = requests.get("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer")
                 frame_container["skeleton"] = response
                 respose_skeleton = response
                 keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))

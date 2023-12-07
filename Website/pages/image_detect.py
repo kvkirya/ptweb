@@ -267,7 +267,7 @@ if uploaded_file is not None:
         # Make the POST request
     # respose_skeleton = requests.post(f"{url}/skeletonizer/", files=files)
 
-    respose_skeleton = requests.post("http://0.0.0.0:8000/skeletonizer", json=json.dumps(image_array.tolist()))
+    respose_skeleton = requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()))
 
     keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
     keypoints_angles = eval(eval(respose_skeleton.text)["keypoints"])
