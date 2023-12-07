@@ -16,7 +16,7 @@ import threading
 
 lock = threading.Lock()
 frame_container = {"frame_count": 0}
-
+url = 'https://skeletonizerfinalbest-2smsbtwy5q-nw.a.run.app'
 
 def resize_image(image):
     image = Image.open(image)
@@ -253,9 +253,9 @@ def webcam():
         image_array = frame.to_ndarray(format="bgr24")
 
         image_array = np.flip(image_array, axis=-1)
+        print("still workings")
 
-        frame_container["frame_count"] = 1
-        response = requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()), verify=False)
+        response = requests.post(f"{url}/skeletonizer", json=json.dumps(image_array.tolist()), verify=False)
         respose_skeleton = response
         keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
 

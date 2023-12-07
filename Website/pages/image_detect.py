@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 import matplotlib.patches as patches
 import json
+url = 'https://skeletonizerfinalbest-2smsbtwy5q-nw.a.run.app'
 
 def resize_image(image):
     image = Image.open(image)
@@ -150,8 +151,6 @@ def draw_prediction_on_image(
 
   height, width, channel = image.shape
 
-  print(height, width, channel)
-
   aspect_ratio = float(width) / height
 
   fig, ax = plt.subplots(figsize=(12 * aspect_ratio, 12))
@@ -198,15 +197,17 @@ def draw_prediction_on_image(
   image_from_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
 #   print(image_from_plot)
 
-  image_from_plot = image_from_plot.reshape(1200,900,3)
-#   image_from_plot = image_from_plot.reshape(fig.canvas.get_width_height()[::-1] + (3,))
-#   plt.close(fig)
+  image_from_plot = image_from_plot.reshape(1200,1600,3)
+
+# #   image_from_plot = image_from_plot.reshape(fig.canvas.get_width_height()[::-1] + (3,))
+# #   plt.close(fig)
 #   if output_image_height is not None:
 #     output_image_width = int(output_image_height / height * width)
 #     image_from_plot = cv2.resize(
 #         image_from_plot, dsize=(output_image_width, output_image_height),
 #          interpolation=cv2.INTER_CUBIC)
   return image_from_plot
+
 
 def plot_skeleton_on_image(image, keypoints_with_scores):
 
@@ -238,7 +239,7 @@ def load_image_for_skeleton(image_path):
 
         return display_image
 
-url = 'http://0.0.0.0:8000' # URL of the registry API
+# URL of the registry API
 
 # Streamlit page layout
 st.title('Image Upload and Reshape')
@@ -250,9 +251,9 @@ if uploaded_file is not None:
 
     #st.image(uploaded_file, caption="uploaded_img", use_column_width=True)
     image = Image.open(uploaded_file)
-
+    image.resize((1200,1600))
     image_array = np.array(image)
-
+    print(image_array.shape)
     # save_image_as_jpeg(uploaded_file, "test_image")
 
     # # Path to the local image file
@@ -267,9 +268,8 @@ if uploaded_file is not None:
         # Make the POST request
     # respose_skeleton = requests.post(f"{url}/skeletonizer/", files=files)
 
-    respose_skeleton = requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()), verify=False)
+    respose_skeleton = requests.post(f"{url}/skeletonizer", json=json.dumps(image_array.tolist()), verify=False)
 
-    print(respose_skeleton)
 
     keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
     keypoints_angles = eval(eval(respose_skeleton.text)["keypoints"])
