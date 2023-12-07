@@ -7,6 +7,7 @@ import requests
 import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 import matplotlib.patches as patches
+import json
 
 def resize_image(image):
     image = Image.open(image)
@@ -24,7 +25,7 @@ def save_image_as_jpeg(image_data, filename):
 
     # Save the image
     image = Image.open(image_data)
-    image.save(os.path.join('../uploaded_images', filename), 'JPEG')
+    image.save(os.path.join('uploaded_images', filename), 'JPEG')
 
 def return_pose(model_output):
 
@@ -66,24 +67,24 @@ def _keypoints_and_edges_for_display(keypoints_with_scores,
     """
 
     KEYPOINT_EDGE_INDS_TO_COLOR = {
-    (0, 1): 'm',
-    (0, 2): 'c',
-    (1, 3): 'm',
-    (2, 4): 'c',
-    (0, 5): 'm',
-    (0, 6): 'c',
-    (5, 7): 'm',
-    (7, 9): 'm',
-    (6, 8): 'c',
-    (8, 10): 'c',
-    (5, 6): 'y',
-    (5, 11): 'm',
-    (6, 12): 'c',
-    (11, 12): 'y',
-    (11, 13): 'm',
-    (13, 15): 'm',
-    (12, 14): 'c',
-    (14, 16): 'c'
+    (0, 1): 'g',
+    (0, 2): 'g',
+    (1, 3): 'g',
+    (2, 4): 'g',
+    (0, 5): 'g',
+    (0, 6): 'g',
+    (5, 7): 'g',
+    (7, 9): 'g',
+    (6, 8): 'g',
+    (8, 10): 'g',
+    (5, 6): 'g',
+    (5, 11): 'g',
+    (6, 12): 'g',
+    (11, 12): 'g',
+    (11, 13): 'g',
+    (13, 15): 'g',
+    (12, 14): 'g',
+    (14, 16): 'g'
     }
 
     keypoints_all = []
@@ -197,14 +198,14 @@ def draw_prediction_on_image(
   image_from_plot = np.frombuffer(fig.canvas.tostring_rgb(), dtype=np.uint8)
 #   print(image_from_plot)
 
-  image_from_plot = image_from_plot.reshape(1200,1200,3)
+  image_from_plot = image_from_plot.reshape(1200,900,3)
 #   image_from_plot = image_from_plot.reshape(fig.canvas.get_width_height()[::-1] + (3,))
 #   plt.close(fig)
-  if output_image_height is not None:
-    output_image_width = int(output_image_height / height * width)
-    image_from_plot = cv2.resize(
-        image_from_plot, dsize=(output_image_width, output_image_height),
-         interpolation=cv2.INTER_CUBIC)
+#   if output_image_height is not None:
+#     output_image_width = int(output_image_height / height * width)
+#     image_from_plot = cv2.resize(
+#         image_from_plot, dsize=(output_image_width, output_image_height),
+#          interpolation=cv2.INTER_CUBIC)
   return image_from_plot
 
 def plot_skeleton_on_image(image, keypoints_with_scores):
@@ -248,40 +249,46 @@ uploaded_file = st.file_uploader("Choose an image...", type=['jpg', 'png', 'jpeg
 if uploaded_file is not None:
 
     #st.image(uploaded_file, caption="uploaded_img", use_column_width=True)
+    image = Image.open(uploaded_file)
 
-    save_image_as_jpeg(uploaded_file, "test_image")
+    image_array = np.array(image)
 
-    # Path to the local image file
-    file_path = "../uploaded_images/test_image.jpg"
+    # save_image_as_jpeg(uploaded_file, "test_image")
+
+    # # Path to the local image file
+    # file_path = "uploaded_images/test_image.jpg"
 
     # Open the file in binary mode
-    with open(file_path, 'rb') as f:
-        # Define the file as a dictionary. The key ('file' in this case)
-        # should match the name of the parameter in your FastAPI endpoint
-        files = {'file': (file_path, f, 'image/jpeg')}
+    # with open(file_path, 'rb') as f:
+    #     # Define the file as a dictionary. The key ('file' in this case)
+    #     # should match the name of the parameter in your FastAPI endpoint
+    #     files = {'file': (file_path, f, 'image/jpeg')}
 
         # Make the POST request
-        respose_skeleton = requests.post(f"{url}/skeletonizer/", files=files)
+    # respose_skeleton = requests.post(f"{url}/skeletonizer/", files=files)
+
+    respose_skeleton = requests.post("http://0.0.0.0:8000/skeletonizer", json=json.dumps(image_array.tolist()))
 
     keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
     keypoints_angles = eval(eval(respose_skeleton.text)["keypoints"])
 
-    test_array = plot_skeleton_on_image("../uploaded_images/test_image.jpg", keypoints_scores)
+    keypoint_angles = {key: value["0"] for key, value in keypoints_angles.items()}
 
-    skele_image = Image.fromarray(test_array)
+    # skele_array = plot_skeleton_on_image("uploaded_images/test_image.jpg", keypoints_scores)
+
+    skele_array = draw_prediction_on_image(image_array, keypoints_scores)
+
+    skele_image = Image.fromarray(skele_array)
 
     st.image(skele_image)
 
-    #st.write(keypoints_scores)
-    #st.write(keypoints_angles)
-
-    # Print the response from the server
     dict_var = eval(respose_skeleton.text)
+
+    dict_var['keypoints'] = f"{keypoint_angles}"
+
     input_for_model = {"data":dict_var}
     response_pose = requests.post(f"{url}/automl_model/", json=input_for_model)
 
     pose_string = return_pose(eval(response_pose.text))
 
-    # Print the response from the server
-
-    st.markdown(f"**GOD DAMN NOW THAT'S ONE HELL OF A {pose_string}, KEEP UP THE GOOD WORK CHAMP**")
+    st.markdown(f"**GOD DAMN NOW THAT'S ONE HELL OF A {pose_string.upper()}, KEEP UP THE GOOD WORK CHAMP**")
