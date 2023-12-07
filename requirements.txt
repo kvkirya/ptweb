@@ -1,4 +1,10 @@
-streamlit
+streamlit==1.20.0
 numpy
 pillow
 opencv-python
+matplotlib
+av
+# cv2
+streamlit-webrtc
+requests
+json
