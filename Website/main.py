@@ -4,7 +4,6 @@ from PIL import Image
 from time import sleep
 import cv2
 
-
 def webcam():
     cap = cv2.VideoCapture(0)
 
@@ -149,21 +148,6 @@ def main():
         pushup_tutorial()
     if st.sidebar.button("Lunge Tutorial"):
         lunge_tutorial()
-
-    left_column, right_column = st.columns(2)
-
-    with left_column:
-        start = st.button('Start')
-        if start:
-            loading_bar_dict = {
-                'Loading Movenet ...': 2
-            }
-            show_loading_bars(loading_bar_dict)
-            webcam()
-
-    with right_column:
-        st.subheader('Number of Reps')
-        slider_count = st.slider('', min_value=3, max_value=20, step=2, format=None, key=None, label_visibility="visible")
 
 if __name__ == "__main__":
     main()
