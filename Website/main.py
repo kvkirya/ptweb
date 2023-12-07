@@ -252,22 +252,13 @@ def webcam():
     def video_frame_callback(frame: av.VideoFrame) -> av.VideoFrame:
         image_array = frame.to_ndarray(format="bgr24")
 
-        print(image_array.shape)
-
         image_array = np.flip(image_array, axis=-1)
 
-        with lock:
-            if frame_container["frame_count"] % 2 == 0:
-                frame_container["frame_count"] = 1
-                response = requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()))
-                respose_skeleton = response
-                keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
-                frame_container['keypoints_scores'] = keypoints_scores
-            else:
-                frame_container["frame_count"] += 1
+        frame_container["frame_count"] = 1
+        response = requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()), verify=False)
+        respose_skeleton = response
+        keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
 
-
-        keypoints_scores = frame_container["keypoints_scores"]
 
         # keypoint_angles = {key: value["0"] for key, value in keypoints_angles.items()}
 
