@@ -15,7 +15,7 @@ from numpy import array, float32
 import threading
 
 lock = threading.Lock()
-frame_container = {"frame_count": 0, "skeleton": None}
+frame_container = {"frame_count": 0}
 
 
 def resize_image(image):
@@ -259,45 +259,37 @@ def webcam():
         with lock:
             if frame_container["frame_count"] % 2 == 0:
                 frame_container["frame_count"] = 1
-                requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()))
-            elif frame_container["frame_count"] == 1:
-                response = requests.get("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer")
-                frame_container["skeleton"] = response
+                response = requests.post("https://ptai-2smsbtwy5q-ew.a.run.app/skeletonizer", json=json.dumps(image_array.tolist()))
                 respose_skeleton = response
                 keypoints_scores = eval(eval(eval(respose_skeleton.text)["keypoints_scores"]))
                 frame_container['keypoints_scores'] = keypoints_scores
-                frame_container["frame_count"] += 1
             else:
                 frame_container["frame_count"] += 1
 
 
-        response = frame_container["skeleton"]
-        if response is not None:
-            print("response")
-            keypoints_scores = frame_container["keypoints_scores"]
+        keypoints_scores = frame_container["keypoints_scores"]
 
-            # keypoint_angles = {key: value["0"] for key, value in keypoints_angles.items()}
+        # keypoint_angles = {key: value["0"] for key, value in keypoints_angles.items()}
 
-            # skele_array = plot_skeleton_on_image(image_array, keypoints_scores)
+        # skele_array = plot_skeleton_on_image(image_array, keypoints_scores)
 
-            image_array = draw_prediction_on_image(image_array, keypoints_scores)
+        image_array = draw_prediction_on_image(image_array, keypoints_scores)
 
-            revserse_skele = np.flip(image_array, axis=-1)
+        revserse_skele = np.flip(image_array, axis=-1)
 
-            # if model is None:
-            #     return image
+        # if model is None:
+        #     return image
 
-            # orig_h, orig_w = image.shape[0:2]
+        # orig_h, orig_w = image.shape[0:2]
 
-            # # cv2.resize used in a forked thread may cause memory leaks
-            # input = np.asarray(Image.fromarray(image).resize((width, int(width * orig_h / orig_w))))
+        # # cv2.resize used in a forked thread may cause memory leaks
+        # input = np.asarray(Image.fromarray(image).resize((width, int(width * orig_h / orig_w))))
 
-            # transferred = style_transfer(input, model)
+        # transferred = style_transfer(input, model)
 
-            # result = Image.fromarray((transferred * 255).astype(np.uint8))
-            # image = np.asarray(result.resize((orig_w, orig_h)))
-            return av.VideoFrame.from_ndarray(revserse_skele, format="bgr24")
-        return av.VideoFrame.from_ndarray(np.flip(image_array, axis=-1), format="bgr24")
+        # result = Image.fromarray((transferred * 255).astype(np.uint8))
+        # image = np.asarray(result.resize((orig_w, orig_h)))
+        return av.VideoFrame.from_ndarray(revserse_skele, format="bgr24")
 
     ctx = webrtc_streamer(
         key="neural-style-transfer",
